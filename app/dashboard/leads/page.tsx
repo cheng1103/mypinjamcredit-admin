@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { formatDateTime } from '@/lib/utils'
-import { ArrowLeft, ChevronLeft, ChevronRight, Eye, Calendar, User, Mail, Phone, Briefcase, DollarSign, MapPin, MessageSquare, Clock, Edit2, Trash2 } from 'lucide-react'
+import { ArrowLeft, ChevronLeft, ChevronRight, Eye, User, Mail, Phone, Briefcase, DollarSign, MapPin, MessageSquare, Clock, Edit2, Trash2 } from 'lucide-react'
 
 interface Lead {
   id: string
