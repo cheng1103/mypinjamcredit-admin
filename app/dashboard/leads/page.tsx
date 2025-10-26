@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { formatDateTime } from '@/lib/utils'
-import { ArrowLeft, ChevronLeft, ChevronRight, Eye, Calendar, User, Mail, Phone, Briefcase, DollarSign, MapPin, MessageSquare, Clock } from 'lucide-react'
+import { ArrowLeft, ChevronLeft, ChevronRight, Eye, Calendar, User, Mail, Phone, Briefcase, DollarSign, MapPin, MessageSquare, Clock, Edit2, Trash2 } from 'lucide-react'
 
 interface Lead {
   id: string
@@ -37,6 +37,8 @@ export default function LeadsPage() {
   const [sortOrder, setSortOrder] = useState<'newest' | 'oldest'>('newest')
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null)
   const [showDetailModal, setShowDetailModal] = useState(false)
+  const [showEditModal, setShowEditModal] = useState(false)
+  const [editingLead, setEditingLead] = useState<Lead | null>(null)
   const itemsPerPage = 10
 
   useEffect(() => {
@@ -124,6 +126,73 @@ export default function LeadsPage() {
       }
     } catch (error) {
       console.error('Failed to assign lead:', error)
+    }
+  }
+
+  const handleEdit = (lead: Lead) => {
+    setEditingLead({ ...lead })
+    setShowEditModal(true)
+  }
+
+  const handleSaveEdit = async () => {
+    if (!editingLead) return
+    const token = localStorage.getItem('adminToken')
+    if (!token) return
+
+    try {
+      const res = await fetch(`http://localhost:4000/api/leads/${editingLead.id}`, {
+        method: 'PATCH',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(editingLead)
+      })
+
+      if (res.ok) {
+        setLeads(leads.map(lead =>
+          lead.id === editingLead.id ? editingLead : lead
+        ))
+        setShowEditModal(false)
+        setEditingLead(null)
+        alert('Lead updated successfully!')
+      } else {
+        alert('Failed to update lead')
+      }
+    } catch (error) {
+      console.error('Failed to update lead:', error)
+      alert('Failed to update lead')
+    }
+  }
+
+  const handleDelete = async (leadId: string) => {
+    if (!confirm('Are you sure you want to delete this application? This action cannot be undone.')) {
+      return
+    }
+
+    const token = localStorage.getItem('adminToken')
+    if (!token) return
+
+    try {
+      const res = await fetch(`http://localhost:4000/api/leads/${leadId}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      })
+
+      if (res.ok) {
+        setLeads(leads.filter(lead => lead.id !== leadId))
+        if (showDetailModal && selectedLead?.id === leadId) {
+          setShowDetailModal(false)
+        }
+        alert('Application deleted successfully')
+      } else {
+        alert('Failed to delete application')
+      }
+    } catch (error) {
+      console.error('Failed to delete lead:', error)
+      alert('Failed to delete application')
     }
   }
 
@@ -296,13 +365,29 @@ export default function LeadsPage() {
                           {new Date(lead.createdAt).toLocaleDateString()}
                         </td>
                         <td className="py-3 px-4">
-                          <button
-                            onClick={() => viewDetails(lead)}
-                            className="flex items-center gap-1 px-3 py-1 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-                          >
-                            <Eye className="w-4 h-4" />
-                            View
-                          </button>
+                          <div className="flex items-center gap-2">
+                            <button
+                              onClick={() => viewDetails(lead)}
+                              className="flex items-center gap-1 px-3 py-1 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                            >
+                              <Eye className="w-4 h-4" />
+                              View
+                            </button>
+                            <button
+                              onClick={() => handleEdit(lead)}
+                              className="flex items-center gap-1 px-3 py-1 text-sm bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                            >
+                              <Edit2 className="w-4 h-4" />
+                              Edit
+                            </button>
+                            <button
+                              onClick={() => handleDelete(lead.id)}
+                              className="flex items-center gap-1 px-3 py-1 text-sm bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                              Delete
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     ))}
@@ -516,6 +601,131 @@ export default function LeadsPage() {
                 className="w-full px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors font-medium"
               >
                 Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Modal */}
+      {showEditModal && editingLead && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4">
+              <div className="flex items-center justify-between">
+                <h2 className="text-2xl font-bold text-gray-900">Edit Application</h2>
+                <button
+                  onClick={() => setShowEditModal(false)}
+                  className="text-gray-500 hover:text-gray-700 text-2xl"
+                >
+                  &times;
+                </button>
+              </div>
+            </div>
+
+            <div className="p-6 space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Full Name *</label>
+                  <input
+                    type="text"
+                    value={editingLead.fullName}
+                    onChange={(e) => setEditingLead({ ...editingLead, fullName: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Phone *</label>
+                  <input
+                    type="text"
+                    value={editingLead.phone}
+                    onChange={(e) => setEditingLead({ ...editingLead, phone: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                  <input
+                    type="email"
+                    value={editingLead.email || ''}
+                    onChange={(e) => setEditingLead({ ...editingLead, email: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Occupation</label>
+                  <input
+                    type="text"
+                    value={editingLead.occupation || ''}
+                    onChange={(e) => setEditingLead({ ...editingLead, occupation: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Monthly Income (RM)</label>
+                  <input
+                    type="number"
+                    value={editingLead.monthlyIncome || ''}
+                    onChange={(e) => setEditingLead({ ...editingLead, monthlyIncome: Number(e.target.value) })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Loan Amount (RM) *</label>
+                  <input
+                    type="number"
+                    value={editingLead.loanAmount}
+                    onChange={(e) => setEditingLead({ ...editingLead, loanAmount: Number(e.target.value) })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Loan Type *</label>
+                  <select
+                    value={editingLead.loanType}
+                    onChange={(e) => setEditingLead({ ...editingLead, loanType: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="PERSONAL_USE">Personal Use</option>
+                    <option value="BUSINESS_EXPANSION">Business Expansion</option>
+                    <option value="EQUIPMENT_FINANCING">Equipment Financing</option>
+                    <option value="WORKING_CAPITAL">Working Capital</option>
+                    <option value="DEBT_CONSOLIDATION">Debt Consolidation</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Location</label>
+                  <input
+                    type="text"
+                    value={editingLead.location || ''}
+                    onChange={(e) => setEditingLead({ ...editingLead, location: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Message</label>
+                <textarea
+                  value={editingLead.message || ''}
+                  onChange={(e) => setEditingLead({ ...editingLead, message: e.target.value })}
+                  rows={3}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+            </div>
+
+            <div className="sticky bottom-0 bg-white border-t border-gray-200 px-6 py-4 flex gap-3">
+              <button
+                onClick={handleSaveEdit}
+                className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
+              >
+                Save Changes
+              </button>
+              <button
+                onClick={() => setShowEditModal(false)}
+                className="flex-1 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors font-medium"
+              >
+                Cancel
               </button>
             </div>
           </div>

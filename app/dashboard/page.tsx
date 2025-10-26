@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { formatDateTime } from '@/lib/utils'
-import { RefreshCw, Users, TrendingUp, FileText, Calendar } from 'lucide-react'
+import { RefreshCw, Users, TrendingUp, FileText, Calendar, Settings } from 'lucide-react'
 import { API_ENDPOINTS } from '@/lib/config'
 import { api, getUserData, clearAuth } from '@/lib/api-client'
 
@@ -142,6 +142,13 @@ export default function DashboardPage() {
               >
                 <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} />
                 Refresh
+              </button>
+              <button
+                onClick={() => router.push('/dashboard/settings')}
+                className="flex items-center gap-2 px-4 py-2 text-sm bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
+              >
+                <Settings className="w-4 h-4" />
+                Settings
               </button>
               <div className="text-right">
                 <p className="text-sm font-medium text-gray-900">{user?.username}</p>
