@@ -6,14 +6,14 @@ import { useRouter } from 'next/navigation'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { formatDateTime } from '@/lib/utils'
 import {
-  ArrowLeft, ChevronLeft, ChevronRight, Eye, User, Mail, Phone, Briefcase,
+  ChevronLeft, ChevronRight, Eye, User, Mail, Phone, Briefcase,
   DollarSign, MapPin, MessageSquare, Clock, Edit2, Trash2, Search, Download,
   Filter, TrendingUp, Users, FileText, CheckCircle, Calendar, FileDown, BarChart3
 } from 'lucide-react'
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts'
 import { exportLeadToPDF, exportLeadsToPDF } from '@/lib/pdfExport'
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000'
+import { API_ENDPOINTS } from '@/lib/config'
+import { api } from '@/lib/api-client'
 
 interface Lead {
   id: string
@@ -66,12 +66,7 @@ export default function LeadsPage() {
   const itemsPerPage = 10
 
   useEffect(() => {
-    const token = localStorage.getItem('adminToken')
-    if (!token) {
-      router.push('/login')
-      return
-    }
-    fetchData(token)
+    fetchData()
   }, [router])
 
   useEffect(() => {
@@ -117,24 +112,15 @@ export default function LeadsPage() {
     setCurrentPage(1) // Reset to first page when filters change
   }, [searchQuery, statusFilter, startDate, endDate, leads])
 
-  const fetchData = async (token: string) => {
+  const fetchData = async () => {
     setLoading(true)
     try {
-      const [leadsRes, usersRes] = await Promise.all([
-        fetch(`${API_URL}/api/leads`, {
-          headers: { 'Authorization': `Bearer ${token}` }
-        }),
-        fetch(`${API_URL}/api/users`, {
-          headers: { 'Authorization': `Bearer ${token}` }
-        })
+      const [leadsData, usersData] = await Promise.all([
+        api.get(API_ENDPOINTS.LEADS.LIST),
+        api.get(API_ENDPOINTS.USERS.LIST)
       ])
-
-      if (leadsRes.ok && usersRes.ok) {
-        const leadsData = await leadsRes.json()
-        const usersData = await usersRes.json()
-        setLeads(leadsData)
-        setUsers(usersData)
-      }
+      setLeads(leadsData)
+      setUsers(usersData)
     } catch (error) {
       console.error('Failed to fetch data:', error)
     } finally {
@@ -219,26 +205,13 @@ export default function LeadsPage() {
   }
 
   const handleStatusChange = async (leadId: string, newStatus: string) => {
-    const token = localStorage.getItem('adminToken')
-    if (!token) return
-
     try {
-      const res = await fetch(`${API_URL}/api/leads/${leadId}/status`, {
-        method: 'PATCH',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ status: newStatus })
-      })
-
-      if (res.ok) {
-        setLeads(leads.map(lead =>
-          lead.id === leadId ? { ...lead, status: newStatus } : lead
-        ))
-        if (selectedLead?.id === leadId) {
-          setSelectedLead({ ...selectedLead, status: newStatus })
-        }
+      await api.patch(API_ENDPOINTS.LEADS.UPDATE_STATUS(leadId), { status: newStatus })
+      setLeads(leads.map(lead =>
+        lead.id === leadId ? { ...lead, status: newStatus } : lead
+      ))
+      if (selectedLead?.id === leadId) {
+        setSelectedLead({ ...selectedLead, status: newStatus })
       }
     } catch (error) {
       console.error('Failed to update status:', error)
@@ -246,26 +219,13 @@ export default function LeadsPage() {
   }
 
   const handleAssignmentChange = async (leadId: string, userId: string) => {
-    const token = localStorage.getItem('adminToken')
-    if (!token) return
-
     try {
-      const res = await fetch(`${API_URL}/api/leads/${leadId}/assign`, {
-        method: 'PATCH',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ userId: userId || null })
-      })
-
-      if (res.ok) {
-        setLeads(leads.map(lead =>
-          lead.id === leadId ? { ...lead, assignedTo: userId || undefined } : lead
-        ))
-        if (selectedLead?.id === leadId) {
-          setSelectedLead({ ...selectedLead, assignedTo: userId || undefined })
-        }
+      await api.patch(API_ENDPOINTS.LEADS.ASSIGN(leadId), { userId: userId || null })
+      setLeads(leads.map(lead =>
+        lead.id === leadId ? { ...lead, assignedTo: userId || undefined } : lead
+      ))
+      if (selectedLead?.id === leadId) {
+        setSelectedLead({ ...selectedLead, assignedTo: userId || undefined })
       }
     } catch (error) {
       console.error('Failed to assign lead:', error)
@@ -279,29 +239,15 @@ export default function LeadsPage() {
 
   const handleSaveEdit = async () => {
     if (!editingLead) return
-    const token = localStorage.getItem('adminToken')
-    if (!token) return
 
     try {
-      const res = await fetch(`${API_URL}/api/leads/${editingLead.id}`, {
-        method: 'PATCH',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(editingLead)
-      })
-
-      if (res.ok) {
-        setLeads(leads.map(lead =>
-          lead.id === editingLead.id ? editingLead : lead
-        ))
-        setShowEditModal(false)
-        setEditingLead(null)
-        alert('Lead updated successfully!')
-      } else {
-        alert('Failed to update lead')
-      }
+      await api.patch(API_ENDPOINTS.LEADS.UPDATE(editingLead.id), editingLead)
+      setLeads(leads.map(lead =>
+        lead.id === editingLead.id ? editingLead : lead
+      ))
+      setShowEditModal(false)
+      setEditingLead(null)
+      alert('Lead updated successfully!')
     } catch (error) {
       console.error('Failed to update lead:', error)
       alert('Failed to update lead')
@@ -313,26 +259,13 @@ export default function LeadsPage() {
       return
     }
 
-    const token = localStorage.getItem('adminToken')
-    if (!token) return
-
     try {
-      const res = await fetch(`${API_URL}/api/leads/${leadId}`, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      })
-
-      if (res.ok) {
-        setLeads(leads.filter(lead => lead.id !== leadId))
-        if (showDetailModal && selectedLead?.id === leadId) {
-          setShowDetailModal(false)
-        }
-        alert('Application deleted successfully')
-      } else {
-        alert('Failed to delete application')
+      await api.delete(API_ENDPOINTS.LEADS.DELETE(leadId))
+      setLeads(leads.filter(lead => lead.id !== leadId))
+      if (showDetailModal && selectedLead?.id === leadId) {
+        setShowDetailModal(false)
       }
+      alert('Application deleted successfully')
     } catch (error) {
       console.error('Failed to delete lead:', error)
       alert('Failed to delete application')
@@ -400,12 +333,6 @@ export default function LeadsPage() {
       <header className="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex items-center gap-4">
-            <button
-              onClick={() => router.push('/dashboard')}
-              className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-            >
-              <ArrowLeft className="w-5 h-5 text-gray-600" />
-            </button>
             <div className="flex-1">
               <h1 className="text-2xl font-bold text-gray-900">Loan Applications</h1>
               <p className="text-sm text-gray-600">Manage and track all loan applications</p>

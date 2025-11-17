@@ -4,7 +4,9 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { formatDateTime } from '@/lib/utils'
-import { ArrowLeft, UserPlus, Edit2, Trash2, Shield, User, Mail, Calendar, Eye, EyeOff } from 'lucide-react'
+import { UserPlus, Edit2, Trash2, Shield, User, Mail, Calendar, Eye, EyeOff } from 'lucide-react'
+import { API_ENDPOINTS } from '@/lib/config'
+import { api, getUserData } from '@/lib/api-client'
 
 interface User {
   id: string
@@ -38,27 +40,23 @@ export default function UsersPage() {
   })
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
+  const [currentUserData, setCurrentUserData] = useState<any>(null)
 
   useEffect(() => {
-    const token = localStorage.getItem('adminToken')
-    if (!token) {
+    const userData = getUserData()
+    if (!userData) {
       router.push('/login')
       return
     }
-    fetchUsers(token)
+    setCurrentUserData(userData)
+    fetchUsers()
   }, [router])
 
-  const fetchUsers = async (token: string) => {
+  const fetchUsers = async () => {
     setLoading(true)
     try {
-      const res = await fetch('http://localhost:4000/api/users', {
-        headers: { 'Authorization': `Bearer ${token}` }
-      })
-
-      if (res.ok) {
-        const data = await res.json()
-        setUsers(data)
-      }
+      const data = await api.get(API_ENDPOINTS.USERS.LIST)
+      setUsers(data)
     } catch (error) {
       console.error('Failed to fetch users:', error)
     } finally {
@@ -75,34 +73,17 @@ export default function UsersPage() {
       return
     }
 
-    const token = localStorage.getItem('adminToken')
-    if (!token) return
-
     try {
-      const res = await fetch('http://localhost:4000/api/users', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(formData)
-      })
-
-      if (res.ok) {
-        const newUser = await res.json()
-        setUsers([...users, newUser])
-        setSuccess('User created successfully')
-        setFormData({ username: '', email: '', password: '', role: 'ADMIN' })
-        setTimeout(() => {
-          setShowAddModal(false)
-          setSuccess('')
-        }, 1500)
-      } else {
-        const errorData = await res.json()
-        setError(errorData.message || 'Failed to create user')
-      }
-    } catch (error) {
-      setError('Failed to create user')
+      const newUser = await api.post(API_ENDPOINTS.USERS.CREATE, formData)
+      setUsers([...users, newUser])
+      setSuccess('User created successfully')
+      setFormData({ username: '', email: '', password: '', role: 'ADMIN' })
+      setTimeout(() => {
+        setShowAddModal(false)
+        setSuccess('')
+      }, 1500)
+    } catch (error: any) {
+      setError(error.data?.message || 'Failed to create user')
     }
   }
 
@@ -111,9 +92,6 @@ export default function UsersPage() {
 
     setError('')
     setSuccess('')
-
-    const token = localStorage.getItem('adminToken')
-    if (!token) return
 
     try {
       const updateData: any = {
@@ -128,58 +106,32 @@ export default function UsersPage() {
         updateData.password = formData.password
       }
 
-      const res = await fetch(`http://localhost:4000/api/users/${selectedUser.id}`, {
-        method: 'PATCH',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(updateData)
-      })
-
-      if (res.ok) {
-        const updatedUser = await res.json()
-        setUsers(users.map(u => u.id === selectedUser.id ? updatedUser : u))
-        setSuccess('User updated successfully')
-        setTimeout(() => {
-          setShowEditModal(false)
-          setSelectedUser(null)
-          setSuccess('')
-          setFormData({ username: '', email: '', password: '', role: 'ADMIN' })
-        }, 1500)
-      } else {
-        const errorData = await res.json()
-        setError(errorData.message || 'Failed to update user')
-      }
-    } catch (error) {
-      setError('Failed to update user')
+      const updatedUser = await api.patch(API_ENDPOINTS.USERS.UPDATE(selectedUser.id), updateData)
+      setUsers(users.map(u => u.id === selectedUser.id ? updatedUser : u))
+      setSuccess('User updated successfully')
+      setTimeout(() => {
+        setShowEditModal(false)
+        setSelectedUser(null)
+        setSuccess('')
+        setFormData({ username: '', email: '', password: '', role: 'ADMIN' })
+      }, 1500)
+    } catch (error: any) {
+      setError(error.data?.message || 'Failed to update user')
     }
   }
 
   const handleDeleteUser = async () => {
     if (!selectedUser) return
 
-    const token = localStorage.getItem('adminToken')
-    if (!token) return
-
     try {
-      const res = await fetch(`http://localhost:4000/api/users/${selectedUser.id}`, {
-        method: 'DELETE',
-        headers: { 'Authorization': `Bearer ${token}` }
-      })
-
-      if (res.ok) {
-        setUsers(users.filter(u => u.id !== selectedUser.id))
-        setShowDeleteModal(false)
-        setSelectedUser(null)
-        setSuccess('User deleted successfully')
-        setTimeout(() => setSuccess(''), 3000)
-      } else {
-        const errorData = await res.json()
-        setError(errorData.message || 'Failed to delete user')
-      }
-    } catch (error) {
-      setError('Failed to delete user')
+      await api.delete(API_ENDPOINTS.USERS.DELETE(selectedUser.id))
+      setUsers(users.filter(u => u.id !== selectedUser.id))
+      setShowDeleteModal(false)
+      setSelectedUser(null)
+      setSuccess('User deleted successfully')
+      setTimeout(() => setSuccess(''), 3000)
+    } catch (error: any) {
+      setError(error.data?.message || 'Failed to delete user')
     }
   }
 
@@ -225,30 +177,24 @@ export default function UsersPage() {
       <header className="bg-white shadow-sm border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <button
-                onClick={() => router.push('/dashboard')}
-                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-              >
-                <ArrowLeft className="w-5 h-5 text-gray-600" />
-              </button>
-              <div>
-                <h1 className="text-2xl font-bold text-gray-900">User Management</h1>
-                <p className="text-sm text-gray-600">Manage admin users and permissions</p>
-              </div>
+            <div>
+              <h1 className="text-2xl font-bold text-gray-900">User Management</h1>
+              <p className="text-sm text-gray-600">Manage admin users and permissions</p>
             </div>
-            <button
-              onClick={() => {
-                setFormData({ username: '', email: '', password: '', role: 'ADMIN' })
-                setError('')
-                setSuccess('')
-                setShowAddModal(true)
-              }}
-              className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-            >
-              <UserPlus className="w-4 h-4" />
-              Add New User
-            </button>
+            {currentUserData?.role === 'SUPERADMIN' && (
+              <button
+                onClick={() => {
+                  setFormData({ username: '', email: '', password: '', role: 'ADMIN' })
+                  setError('')
+                  setSuccess('')
+                  setShowAddModal(true)
+                }}
+                className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              >
+                <UserPlus className="w-4 h-4" />
+                Add New User
+              </button>
+            )}
           </div>
         </div>
       </header>

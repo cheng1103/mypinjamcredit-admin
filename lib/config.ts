@@ -10,6 +10,8 @@ export const API_ENDPOINTS = {
     LIST: `${API_URL}/api/leads`,
     UPDATE_STATUS: (id: string) => `${API_URL}/api/leads/${id}/status`,
     ASSIGN: (id: string) => `${API_URL}/api/leads/${id}/assign`,
+    UPDATE: (id: string) => `${API_URL}/api/leads/${id}`,
+    DELETE: (id: string) => `${API_URL}/api/leads/${id}`,
   },
   USERS: {
     LIST: `${API_URL}/api/users`,
@@ -22,6 +24,9 @@ export const API_ENDPOINTS = {
     APPROVE: (id: string) => `${API_URL}/api/testimonials/${id}/approve`,
     REJECT: (id: string) => `${API_URL}/api/testimonials/${id}/reject`,
     DELETE: (id: string) => `${API_URL}/api/testimonials/${id}`,
+  },
+  SETTINGS: {
+    CHANGE_PASSWORD: `${API_URL}/api/auth/change-password`,
   },
 }
 

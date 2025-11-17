@@ -4,7 +4,9 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { formatDateTime } from '@/lib/utils'
-import { ArrowLeft, CheckCircle, XCircle, Star, User, MessageSquare, Calendar, Eye } from 'lucide-react'
+import { CheckCircle, XCircle, Star, User, MessageSquare, Calendar, Eye } from 'lucide-react'
+import { API_ENDPOINTS } from '@/lib/config'
+import { api } from '@/lib/api-client'
 
 interface Testimonial {
   id: string
@@ -27,25 +29,14 @@ export default function TestimonialsPage() {
   const [success, setSuccess] = useState('')
 
   useEffect(() => {
-    const token = localStorage.getItem('adminToken')
-    if (!token) {
-      router.push('/login')
-      return
-    }
-    fetchTestimonials(token)
+    fetchTestimonials()
   }, [router])
 
-  const fetchTestimonials = async (token: string) => {
+  const fetchTestimonials = async () => {
     setLoading(true)
     try {
-      const res = await fetch('http://localhost:4000/api/testimonials/moderation', {
-        headers: { 'Authorization': `Bearer ${token}` }
-      })
-
-      if (res.ok) {
-        const data = await res.json()
-        setTestimonials(data)
-      }
+      const data = await api.get(API_ENDPOINTS.TESTIMONIALS.MODERATION)
+      setTestimonials(data)
     } catch (error) {
       console.error('Failed to fetch testimonials:', error)
     } finally {
@@ -54,76 +45,47 @@ export default function TestimonialsPage() {
   }
 
   const handleApprove = async (id: string) => {
-    const token = localStorage.getItem('adminToken')
-    if (!token) return
-
     try {
-      const res = await fetch(`http://localhost:4000/api/testimonials/${id}/approve`, {
-        method: 'PATCH',
-        headers: { 'Authorization': `Bearer ${token}` }
-      })
-
-      if (res.ok) {
-        const updated = await res.json()
-        setTestimonials(testimonials.map(t => t.id === id ? updated : t))
-        if (selectedTestimonial?.id === id) {
-          setSelectedTestimonial(updated)
-        }
-        setSuccess('Testimonial approved successfully')
-        setTimeout(() => setSuccess(''), 3000)
+      const updated = await api.patch(API_ENDPOINTS.TESTIMONIALS.APPROVE(id))
+      setTestimonials(testimonials.map(t => t.id === id ? updated : t))
+      if (selectedTestimonial?.id === id) {
+        setSelectedTestimonial(updated)
       }
+      setSuccess('Testimonial approved successfully')
+      setTimeout(() => setSuccess(''), 3000)
     } catch (error) {
       console.error('Failed to approve testimonial:', error)
     }
   }
 
   const handleReject = async (id: string) => {
-    const token = localStorage.getItem('adminToken')
-    if (!token) return
-
     try {
-      const res = await fetch(`http://localhost:4000/api/testimonials/${id}/reject`, {
-        method: 'PATCH',
-        headers: { 'Authorization': `Bearer ${token}` }
-      })
-
-      if (res.ok) {
-        const updated = await res.json()
-        setTestimonials(testimonials.map(t => t.id === id ? updated : t))
-        if (selectedTestimonial?.id === id) {
-          setSelectedTestimonial(updated)
-        }
-        setSuccess('Testimonial rejected successfully')
-        setTimeout(() => setSuccess(''), 3000)
+      const updated = await api.patch(API_ENDPOINTS.TESTIMONIALS.REJECT(id))
+      setTestimonials(testimonials.map(t => t.id === id ? updated : t))
+      if (selectedTestimonial?.id === id) {
+        setSelectedTestimonial(updated)
       }
+      setSuccess('Testimonial rejected successfully')
+      setTimeout(() => setSuccess(''), 3000)
     } catch (error) {
       console.error('Failed to reject testimonial:', error)
     }
   }
 
   const handleDelete = async (id: string) => {
-    const token = localStorage.getItem('adminToken')
-    if (!token) return
-
     if (!confirm('Are you sure you want to delete this testimonial? This action cannot be undone.')) {
       return
     }
 
     try {
-      const res = await fetch(`http://localhost:4000/api/testimonials/${id}`, {
-        method: 'DELETE',
-        headers: { 'Authorization': `Bearer ${token}` }
-      })
-
-      if (res.ok) {
-        setTestimonials(testimonials.filter(t => t.id !== id))
-        if (selectedTestimonial?.id === id) {
-          setShowDetailModal(false)
-          setSelectedTestimonial(null)
-        }
-        setSuccess('Testimonial deleted successfully')
-        setTimeout(() => setSuccess(''), 3000)
+      await api.delete(API_ENDPOINTS.TESTIMONIALS.DELETE(id))
+      setTestimonials(testimonials.filter(t => t.id !== id))
+      if (selectedTestimonial?.id === id) {
+        setShowDetailModal(false)
+        setSelectedTestimonial(null)
       }
+      setSuccess('Testimonial deleted successfully')
+      setTimeout(() => setSuccess(''), 3000)
     } catch (error) {
       console.error('Failed to delete testimonial:', error)
     }
@@ -191,17 +153,9 @@ export default function TestimonialsPage() {
       {/* Header */}
       <header className="bg-white shadow-sm border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex items-center gap-4">
-            <button
-              onClick={() => router.push('/dashboard')}
-              className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-            >
-              <ArrowLeft className="w-5 h-5 text-gray-600" />
-            </button>
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">Testimonial Management</h1>
-              <p className="text-sm text-gray-600">Review and moderate customer testimonials</p>
-            </div>
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">Testimonial Management</h1>
+            <p className="text-sm text-gray-600">Review and moderate customer testimonials</p>
           </div>
         </div>
       </header>

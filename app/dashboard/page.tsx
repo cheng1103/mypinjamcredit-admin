@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { formatDateTime } from '@/lib/utils'
-import { RefreshCw, Users, TrendingUp, FileText, Calendar, Settings } from 'lucide-react'
+import { RefreshCw, Users, TrendingUp, FileText, Calendar, Settings, User, Phone, Mail, Briefcase, DollarSign, MapPin, MessageSquare, Eye } from 'lucide-react'
 import { API_ENDPOINTS } from '@/lib/config'
 import { api, getUserData, clearAuth } from '@/lib/api-client'
 
@@ -21,8 +21,12 @@ interface Lead {
   fullName: string
   email?: string
   phone: string
+  occupation?: string
+  monthlyIncome?: number
   loanAmount: number
   loanType: string
+  location?: string
+  message?: string
   status: string
   createdAt: string
 }
@@ -40,6 +44,8 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
   const [lastUpdate, setLastUpdate] = useState<Date>(new Date())
+  const [selectedLead, setSelectedLead] = useState<Lead | null>(null)
+  const [showDetailModal, setShowDetailModal] = useState(false)
 
   useEffect(() => {
     // Safe JSON parse with error handling
@@ -224,7 +230,7 @@ export default function DashboardPage() {
         <Card>
           <CardHeader>
             <CardTitle>Recent Applications</CardTitle>
-            <CardDescription>Latest 5 loan applications</CardDescription>
+            <CardDescription>Latest 5 loan applications with detailed information</CardDescription>
           </CardHeader>
           <CardContent>
             {stats.recentLeads.length === 0 ? (
@@ -232,28 +238,127 @@ export default function DashboardPage() {
                 No applications yet
               </div>
             ) : (
-              <div className="space-y-4">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                 {stats.recentLeads.map((lead) => (
-                  <div key={lead.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
-                    <div className="flex-1">
+                  <div
+                    key={lead.id}
+                    className="bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 border border-gray-200 rounded-xl p-5 hover:shadow-lg transition-all hover:scale-[1.02]"
+                  >
+                    {/* Header */}
+                    <div className="flex items-start justify-between mb-4">
                       <div className="flex items-center gap-3">
+                        <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-bold text-lg shadow-md">
+                          {lead.fullName.charAt(0).toUpperCase()}
+                        </div>
                         <div>
-                          <p className="font-medium text-gray-900">{lead.fullName}</p>
-                          <p className="text-sm text-gray-600">{lead.phone}</p>
+                          <h3 className="font-bold text-gray-900">{lead.fullName}</h3>
+                          <span className={`inline-block mt-1 px-2 py-0.5 text-xs font-semibold rounded-full ${getStatusColor(lead.status)}`}>
+                            {lead.status.replace(/_/g, ' ')}
+                          </span>
                         </div>
                       </div>
+                      <button
+                        onClick={() => {
+                          setSelectedLead(lead)
+                          setShowDetailModal(true)
+                        }}
+                        className="p-2 hover:bg-white/80 rounded-lg transition-colors"
+                        title="View Full Details"
+                      >
+                        <Eye className="w-5 h-5 text-blue-600" />
+                      </button>
                     </div>
-                    <div className="flex items-center gap-4">
-                      <div className="text-right">
-                        <p className="font-semibold text-gray-900">
-                          RM {lead.loanAmount.toLocaleString()}
-                        </p>
-                        <p className="text-xs text-gray-600">{lead.loanType.replace(/_/g, ' ')}</p>
+
+                    {/* Information Grid */}
+                    <div className="space-y-3">
+                      <div className="grid grid-cols-2 gap-3">
+                        <div className="bg-white/70 backdrop-blur-sm rounded-lg p-3">
+                          <div className="flex items-center gap-2 text-xs text-gray-600 mb-1">
+                            <Phone className="w-3 h-3" />
+                            <span>Phone</span>
+                          </div>
+                          <p className="text-sm font-semibold text-gray-900">{lead.phone}</p>
+                        </div>
+
+                        {lead.email && (
+                          <div className="bg-white/70 backdrop-blur-sm rounded-lg p-3">
+                            <div className="flex items-center gap-2 text-xs text-gray-600 mb-1">
+                              <Mail className="w-3 h-3" />
+                              <span>Email</span>
+                            </div>
+                            <p className="text-sm font-semibold text-gray-900 truncate">{lead.email}</p>
+                          </div>
+                        )}
                       </div>
-                      <span className={`px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(lead.status)}`}>
-                        {lead.status}
-                      </span>
+
+                      {lead.occupation && (
+                        <div className="bg-white/70 backdrop-blur-sm rounded-lg p-3">
+                          <div className="flex items-center gap-2 text-xs text-gray-600 mb-1">
+                            <Briefcase className="w-3 h-3" />
+                            <span>Occupation</span>
+                          </div>
+                          <p className="text-sm font-semibold text-gray-900">{lead.occupation}</p>
+                        </div>
+                      )}
+
+                      <div className="grid grid-cols-2 gap-3">
+                        <div className="bg-white/70 backdrop-blur-sm rounded-lg p-3">
+                          <div className="flex items-center gap-2 text-xs text-gray-600 mb-1">
+                            <DollarSign className="w-3 h-3" />
+                            <span>Loan Amount</span>
+                          </div>
+                          <p className="text-sm font-bold text-blue-600">RM {lead.loanAmount.toLocaleString()}</p>
+                        </div>
+
+                        {lead.monthlyIncome && (
+                          <div className="bg-white/70 backdrop-blur-sm rounded-lg p-3">
+                            <div className="flex items-center gap-2 text-xs text-gray-600 mb-1">
+                              <TrendingUp className="w-3 h-3" />
+                              <span>Monthly Income</span>
+                            </div>
+                            <p className="text-sm font-semibold text-gray-900">RM {lead.monthlyIncome.toLocaleString()}</p>
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="bg-white/70 backdrop-blur-sm rounded-lg p-3">
+                        <div className="flex items-center gap-2 text-xs text-gray-600 mb-1">
+                          <FileText className="w-3 h-3" />
+                          <span>Loan Type</span>
+                        </div>
+                        <p className="text-sm font-semibold text-gray-900">{lead.loanType.replace(/_/g, ' ')}</p>
+                      </div>
+
+                      {lead.location && (
+                        <div className="bg-white/70 backdrop-blur-sm rounded-lg p-3">
+                          <div className="flex items-center gap-2 text-xs text-gray-600 mb-1">
+                            <MapPin className="w-3 h-3" />
+                            <span>Location</span>
+                          </div>
+                          <p className="text-sm font-semibold text-gray-900">{lead.location}</p>
+                        </div>
+                      )}
+
+                      <div className="bg-white/70 backdrop-blur-sm rounded-lg p-3">
+                        <div className="flex items-center gap-2 text-xs text-gray-600 mb-1">
+                          <Calendar className="w-3 h-3" />
+                          <span>Created</span>
+                        </div>
+                        <p className="text-sm font-semibold text-gray-900">{formatDateTime(new Date(lead.createdAt))}</p>
+                      </div>
                     </div>
+
+                    {/* View Details Button */}
+                    <button
+                      onClick={() => {
+                        setSelectedLead(lead)
+                        setShowDetailModal(true)
+                      }}
+                      className="mt-4 w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all font-medium shadow-md hover:shadow-lg"
+                    >
+                      <Eye className="w-4 h-4" />
+                      View Full Details
+                    </button>
                   </div>
                 ))}
               </div>
@@ -288,6 +393,156 @@ export default function DashboardPage() {
           </button>
         </div>
       </main>
+
+      {/* Detail Modal */}
+      {showDetailModal && selectedLead && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="text-2xl font-bold text-gray-900">Application Details</h2>
+                  <p className="text-sm text-gray-500 mt-1">Complete customer information</p>
+                </div>
+                <button
+                  onClick={() => setShowDetailModal(false)}
+                  className="text-gray-500 hover:text-gray-700 text-2xl font-bold w-8 h-8 flex items-center justify-center hover:bg-gray-100 rounded-lg transition-colors"
+                >
+                  &times;
+                </button>
+              </div>
+            </div>
+
+            <div className="p-6 space-y-6">
+              {/* Personal Information */}
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                  <User className="w-5 h-5 text-blue-600" />
+                  Personal Information
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-gradient-to-br from-blue-50 to-blue-100 p-5 rounded-xl border border-blue-200">
+                  <div>
+                    <p className="text-xs text-gray-600 mb-1 font-medium">Full Name</p>
+                    <p className="font-semibold text-gray-900">{selectedLead.fullName}</p>
+                  </div>
+                  {selectedLead.occupation && (
+                    <div>
+                      <p className="text-xs text-gray-600 mb-1 font-medium">Occupation</p>
+                      <p className="font-semibold text-gray-900">{selectedLead.occupation}</p>
+                    </div>
+                  )}
+                  {selectedLead.monthlyIncome && (
+                    <div>
+                      <p className="text-xs text-gray-600 mb-1 font-medium">Monthly Income</p>
+                      <p className="font-semibold text-gray-900">
+                        RM {selectedLead.monthlyIncome.toLocaleString()}
+                      </p>
+                    </div>
+                  )}
+                  {selectedLead.location && (
+                    <div>
+                      <p className="text-xs text-gray-600 mb-1 font-medium">Location</p>
+                      <p className="font-semibold text-gray-900">{selectedLead.location}</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Contact Information */}
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                  <Phone className="w-5 h-5 text-green-600" />
+                  Contact Information
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-gradient-to-br from-green-50 to-green-100 p-5 rounded-xl border border-green-200">
+                  <div>
+                    <p className="text-xs text-gray-600 mb-1 font-medium">Phone Number</p>
+                    <p className="font-semibold text-gray-900">{selectedLead.phone}</p>
+                  </div>
+                  {selectedLead.email && (
+                    <div>
+                      <p className="text-xs text-gray-600 mb-1 font-medium">Email Address</p>
+                      <p className="font-semibold text-gray-900">{selectedLead.email}</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Loan Information */}
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                  <DollarSign className="w-5 h-5 text-purple-600" />
+                  Loan Information
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-gradient-to-br from-purple-50 to-purple-100 p-5 rounded-xl border border-purple-200">
+                  <div>
+                    <p className="text-xs text-gray-600 mb-1 font-medium">Loan Amount Requested</p>
+                    <p className="font-bold text-gray-900 text-xl">
+                      RM {selectedLead.loanAmount.toLocaleString()}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-600 mb-1 font-medium">Loan Purpose</p>
+                    <p className="font-semibold text-gray-900">
+                      {selectedLead.loanType.replace(/_/g, ' ')}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Message */}
+              {selectedLead.message && (
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                    <MessageSquare className="w-5 h-5 text-amber-600" />
+                    Additional Message
+                  </h3>
+                  <div className="bg-gradient-to-br from-amber-50 to-amber-100 p-5 rounded-xl border border-amber-200">
+                    <p className="text-gray-700 whitespace-pre-wrap">{selectedLead.message}</p>
+                  </div>
+                </div>
+              )}
+
+              {/* Status & Timeline */}
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                  <Calendar className="w-5 h-5 text-rose-600" />
+                  Status & Timeline
+                </h3>
+                <div className="bg-gradient-to-br from-rose-50 to-rose-100 p-5 rounded-xl border border-rose-200 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-gray-600">Status</span>
+                    <span className={`px-3 py-1 text-xs font-semibold rounded-full ${getStatusColor(selectedLead.status)}`}>
+                      {selectedLead.status.replace(/_/g, ' ')}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-gray-600">Submitted</span>
+                    <span className="text-sm font-medium text-gray-900">
+                      {formatDateTime(new Date(selectedLead.createdAt))}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="sticky bottom-0 bg-gray-50 border-t border-gray-200 px-6 py-4 rounded-b-2xl flex gap-3">
+              <button
+                onClick={() => router.push('/dashboard/leads')}
+                className="flex-1 px-4 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium shadow-sm"
+              >
+                Go to All Applications
+              </button>
+              <button
+                onClick={() => setShowDetailModal(false)}
+                className="flex-1 px-4 py-2.5 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors font-medium"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

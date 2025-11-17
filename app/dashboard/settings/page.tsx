@@ -3,7 +3,9 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { ArrowLeft, Lock, Eye, EyeOff } from 'lucide-react'
+import { Lock, Eye, EyeOff } from 'lucide-react'
+import { API_ENDPOINTS } from '@/lib/config'
+import { api } from '@/lib/api-client'
 
 export default function SettingsPage() {
   const router = useRouter()
@@ -41,41 +43,23 @@ export default function SettingsPage() {
     setLoading(true)
 
     try {
-      const token = localStorage.getItem('adminToken')
-      if (!token) {
-        router.push('/login')
-        return
-      }
-
-      const res = await fetch('http://localhost:4000/api/auth/change-password', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          oldPassword,
-          newPassword
-        })
+      await api.post(API_ENDPOINTS.SETTINGS.CHANGE_PASSWORD, {
+        oldPassword,
+        newPassword
       })
 
-      if (res.ok) {
-        setSuccess('Password changed successfully!')
-        setOldPassword('')
-        setNewPassword('')
-        setConfirmPassword('')
+      setSuccess('Password changed successfully!')
+      setOldPassword('')
+      setNewPassword('')
+      setConfirmPassword('')
 
-        // Auto redirect after 2 seconds
-        setTimeout(() => {
-          router.push('/dashboard')
-        }, 2000)
-      } else {
-        const data = await res.json()
-        setError(data.message || 'Failed to change password')
-      }
-    } catch (error) {
+      // Auto redirect after 2 seconds
+      setTimeout(() => {
+        router.push('/dashboard')
+      }, 2000)
+    } catch (error: any) {
       console.error('Failed to change password:', error)
-      setError('Failed to change password. Please try again.')
+      setError(error.data?.message || 'Failed to change password. Please try again.')
     } finally {
       setLoading(false)
     }
@@ -86,17 +70,9 @@ export default function SettingsPage() {
       {/* Header */}
       <header className="bg-white shadow-sm border-b border-gray-200">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex items-center gap-4">
-            <button
-              onClick={() => router.push('/dashboard')}
-              className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-            >
-              <ArrowLeft className="w-5 h-5 text-gray-600" />
-            </button>
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">Account Settings</h1>
-              <p className="text-sm text-gray-600">Manage your account preferences</p>
-            </div>
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">Account Settings</h1>
+            <p className="text-sm text-gray-600">Manage your account preferences</p>
           </div>
         </div>
       </header>
