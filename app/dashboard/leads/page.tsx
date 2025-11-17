@@ -1,5 +1,5 @@
 'use client'
-// Version: 2024-11-14-1750 - Force cache refresh
+// Version: 2024-11-14-1800 - Added sidebar navigation
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
