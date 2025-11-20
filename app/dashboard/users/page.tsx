@@ -3,8 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { formatDateTime } from '@/lib/utils'
-import { UserPlus, Edit2, Trash2, Shield, User, Mail, Calendar, Eye, EyeOff } from 'lucide-react'
+import { UserPlus, Edit2, Trash2, User, Mail, Calendar, Eye, EyeOff } from 'lucide-react'
 import { API_ENDPOINTS } from '@/lib/config'
 import { api, getUserData } from '@/lib/api-client'
 

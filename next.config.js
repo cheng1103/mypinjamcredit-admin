@@ -1,11 +1,12 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  eslint: {
-    ignoreDuringBuilds: true,
-  },
-  typescript: {
-    ignoreBuildErrors: true,
-  },
+  // Type checking and linting enabled for better code quality
+  // eslint: {
+  //   ignoreDuringBuilds: false, // Enable ESLint during builds
+  // },
+  // typescript: {
+  //   ignoreBuildErrors: false, // Enable TypeScript error checking during builds
+  // },
   async headers() {
     return [
       {

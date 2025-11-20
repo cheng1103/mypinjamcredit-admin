@@ -7,7 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { formatDateTime } from '@/lib/utils'
 import {
   ChevronLeft, ChevronRight, Eye, User, Mail, Phone, Briefcase,
-  DollarSign, MapPin, MessageSquare, Clock, Edit2, Trash2, Search, Download,
+  DollarSign, MessageSquare, Clock, Edit2, Trash2, Search, Download,
   Filter, TrendingUp, Users, FileText, CheckCircle, Calendar, FileDown, BarChart3
 } from 'lucide-react'
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts'
