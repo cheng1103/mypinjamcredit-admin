@@ -134,35 +134,35 @@ export default function DashboardPage() {
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
       <header className="bg-white shadow-sm border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex justify-between items-center">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 sm:py-4">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-4">
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
-              <p className="text-sm text-gray-600">MyPinjam Credit Admin</p>
+              <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Dashboard</h1>
+              <p className="text-xs sm:text-sm text-gray-600">MyPinjam Credit Admin</p>
             </div>
-            <div className="flex items-center gap-4">
+            <div className="flex flex-wrap items-center gap-2 sm:gap-4 w-full sm:w-auto">
               <button
                 onClick={handleRefresh}
                 disabled={refreshing}
-                className="flex items-center gap-2 px-4 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
+                className="flex items-center gap-1 sm:gap-2 px-3 sm:px-4 py-2 text-xs sm:text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
               >
-                <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} />
-                Refresh
+                <RefreshCw className={`w-3 h-3 sm:w-4 sm:h-4 ${refreshing ? 'animate-spin' : ''}`} />
+                <span className="hidden sm:inline">Refresh</span>
               </button>
               <button
                 onClick={() => router.push('/dashboard/settings')}
-                className="flex items-center gap-2 px-4 py-2 text-sm bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
+                className="flex items-center gap-1 sm:gap-2 px-3 sm:px-4 py-2 text-xs sm:text-sm bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
               >
-                <Settings className="w-4 h-4" />
-                Settings
+                <Settings className="w-3 h-3 sm:w-4 sm:h-4" />
+                <span className="hidden sm:inline">Settings</span>
               </button>
-              <div className="text-right">
+              <div className="hidden md:block text-right">
                 <p className="text-sm font-medium text-gray-900">{user?.username}</p>
                 <p className="text-xs text-gray-600">{user?.role}</p>
               </div>
               <button
                 onClick={handleLogout}
-                className="px-4 py-2 text-sm bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
+                className="px-3 sm:px-4 py-2 text-xs sm:text-sm bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
               >
                 Sign Out
               </button>
@@ -396,31 +396,31 @@ export default function DashboardPage() {
 
       {/* Detail Modal */}
       {showDetailModal && selectedLead && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto">
-            <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-2 sm:p-4">
+          <div className="bg-white rounded-xl sm:rounded-2xl shadow-2xl max-w-3xl w-full max-h-[95vh] sm:max-h-[90vh] overflow-y-auto">
+            <div className="sticky top-0 bg-white border-b border-gray-200 px-4 sm:px-6 py-3 sm:py-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <h2 className="text-2xl font-bold text-gray-900">Application Details</h2>
-                  <p className="text-sm text-gray-500 mt-1">Complete customer information</p>
+                  <h2 className="text-lg sm:text-2xl font-bold text-gray-900">Application Details</h2>
+                  <p className="text-xs sm:text-sm text-gray-500 mt-1">Complete customer information</p>
                 </div>
                 <button
                   onClick={() => setShowDetailModal(false)}
-                  className="text-gray-500 hover:text-gray-700 text-2xl font-bold w-8 h-8 flex items-center justify-center hover:bg-gray-100 rounded-lg transition-colors"
+                  className="text-gray-500 hover:text-gray-700 text-xl sm:text-2xl font-bold w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center hover:bg-gray-100 rounded-lg transition-colors"
                 >
                   &times;
                 </button>
               </div>
             </div>
 
-            <div className="p-6 space-y-6">
+            <div className="p-4 sm:p-6 space-y-4 sm:space-y-6">
               {/* Personal Information */}
               <div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-3 flex items-center gap-2">
-                  <User className="w-5 h-5 text-blue-600" />
+                <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-2 sm:mb-3 flex items-center gap-2">
+                  <User className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600" />
                   Personal Information
                 </h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-gradient-to-br from-blue-50 to-blue-100 p-5 rounded-xl border border-blue-200">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4 bg-gradient-to-br from-blue-50 to-blue-100 p-3 sm:p-5 rounded-xl border border-blue-200">
                   <div>
                     <p className="text-xs text-gray-600 mb-1 font-medium">Full Name</p>
                     <p className="font-semibold text-gray-900">{selectedLead.fullName}</p>
@@ -450,11 +450,11 @@ export default function DashboardPage() {
 
               {/* Contact Information */}
               <div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-3 flex items-center gap-2">
-                  <Phone className="w-5 h-5 text-green-600" />
+                <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-2 sm:mb-3 flex items-center gap-2">
+                  <Phone className="w-4 h-4 sm:w-5 sm:h-5 text-green-600" />
                   Contact Information
                 </h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-gradient-to-br from-green-50 to-green-100 p-5 rounded-xl border border-green-200">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4 bg-gradient-to-br from-green-50 to-green-100 p-3 sm:p-5 rounded-xl border border-green-200">
                   <div>
                     <p className="text-xs text-gray-600 mb-1 font-medium">Phone Number</p>
                     <p className="font-semibold text-gray-900">{selectedLead.phone}</p>
@@ -470,11 +470,11 @@ export default function DashboardPage() {
 
               {/* Loan Information */}
               <div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-3 flex items-center gap-2">
-                  <DollarSign className="w-5 h-5 text-purple-600" />
+                <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-2 sm:mb-3 flex items-center gap-2">
+                  <DollarSign className="w-4 h-4 sm:w-5 sm:h-5 text-purple-600" />
                   Loan Information
                 </h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-gradient-to-br from-purple-50 to-purple-100 p-5 rounded-xl border border-purple-200">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4 bg-gradient-to-br from-purple-50 to-purple-100 p-3 sm:p-5 rounded-xl border border-purple-200">
                   <div>
                     <p className="text-xs text-gray-600 mb-1 font-medium">Loan Amount Requested</p>
                     <p className="font-bold text-gray-900 text-xl">
@@ -493,11 +493,11 @@ export default function DashboardPage() {
               {/* Message */}
               {selectedLead.message && (
                 <div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-3 flex items-center gap-2">
-                    <MessageSquare className="w-5 h-5 text-amber-600" />
+                  <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-2 sm:mb-3 flex items-center gap-2">
+                    <MessageSquare className="w-4 h-4 sm:w-5 sm:h-5 text-amber-600" />
                     Additional Message
                   </h3>
-                  <div className="bg-gradient-to-br from-amber-50 to-amber-100 p-5 rounded-xl border border-amber-200">
+                  <div className="bg-gradient-to-br from-amber-50 to-amber-100 p-3 sm:p-5 rounded-xl border border-amber-200">
                     <p className="text-gray-700 whitespace-pre-wrap">{selectedLead.message}</p>
                   </div>
                 </div>
@@ -505,11 +505,11 @@ export default function DashboardPage() {
 
               {/* Status & Timeline */}
               <div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-3 flex items-center gap-2">
-                  <Calendar className="w-5 h-5 text-rose-600" />
+                <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-2 sm:mb-3 flex items-center gap-2">
+                  <Calendar className="w-4 h-4 sm:w-5 sm:h-5 text-rose-600" />
                   Status & Timeline
                 </h3>
-                <div className="bg-gradient-to-br from-rose-50 to-rose-100 p-5 rounded-xl border border-rose-200 space-y-3">
+                <div className="bg-gradient-to-br from-rose-50 to-rose-100 p-3 sm:p-5 rounded-xl border border-rose-200 space-y-2 sm:space-y-3">
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-gray-600">Status</span>
                     <span className={`px-3 py-1 text-xs font-semibold rounded-full ${getStatusColor(selectedLead.status)}`}>
@@ -526,16 +526,16 @@ export default function DashboardPage() {
               </div>
             </div>
 
-            <div className="sticky bottom-0 bg-gray-50 border-t border-gray-200 px-6 py-4 rounded-b-2xl flex gap-3">
+            <div className="sticky bottom-0 bg-gray-50 border-t border-gray-200 px-4 sm:px-6 py-3 sm:py-4 rounded-b-xl sm:rounded-b-2xl flex flex-col sm:flex-row gap-2 sm:gap-3">
               <button
                 onClick={() => router.push('/dashboard/leads')}
-                className="flex-1 px-4 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium shadow-sm"
+                className="flex-1 px-3 sm:px-4 py-2 sm:py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium shadow-sm text-sm sm:text-base"
               >
                 Go to All Applications
               </button>
               <button
                 onClick={() => setShowDetailModal(false)}
-                className="flex-1 px-4 py-2.5 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors font-medium"
+                className="flex-1 px-3 sm:px-4 py-2 sm:py-2.5 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors font-medium text-sm sm:text-base"
               >
                 Close
               </button>
