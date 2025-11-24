@@ -1,5 +1,5 @@
 'use client'
-// Version: 2024-11-14-1800 - Added sidebar navigation
+// Version: 2024-11-24-1900 - Real analytics integration
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
@@ -47,6 +47,12 @@ interface LeadStats {
   completed: number
 }
 
+interface DailyStat {
+  date: string
+  leads: number
+  visits: number
+}
+
 export default function LeadsPage() {
   const router = useRouter()
   const [leads, setLeads] = useState<Lead[]>([])
@@ -63,6 +69,7 @@ export default function LeadsPage() {
   const [statusFilter, setStatusFilter] = useState<string>('all')
   const [startDate, setStartDate] = useState<string>('')
   const [endDate, setEndDate] = useState<string>('')
+  const [dailyStats, setDailyStats] = useState<DailyStat[]>([])
   const itemsPerPage = 10
 
   useEffect(() => {
@@ -115,12 +122,22 @@ export default function LeadsPage() {
   const fetchData = async () => {
     setLoading(true)
     try {
-      const [leadsData, usersData] = await Promise.all([
+      const [leadsData, usersData, analyticsData] = await Promise.all([
         api.get(API_ENDPOINTS.LEADS.LIST),
-        api.get(API_ENDPOINTS.USERS.LIST)
+        api.get(API_ENDPOINTS.USERS.LIST),
+        api.get(API_ENDPOINTS.ANALYTICS.DAILY_STATS).catch(() => null) // Graceful fallback
       ])
       setLeads(leadsData)
       setUsers(usersData)
+
+      // Process analytics data if available
+      if (analyticsData && Array.isArray(analyticsData)) {
+        const processedStats = generateDailyStatsFromAPI(leadsData, analyticsData)
+        setDailyStats(processedStats)
+      } else {
+        // Fallback: generate stats without real visits data
+        setDailyStats(generateDailyStatsFromAPI(leadsData, []))
+      }
     } catch (error) {
       console.error('Failed to fetch data:', error)
     } finally {
@@ -139,11 +156,22 @@ export default function LeadsPage() {
     }
   }
 
-  const generateDailyStats = () => {
+  const generateDailyStatsFromAPI = (leadsData: Lead[], analyticsData: any[]): DailyStat[] => {
     // Get last 14 days
     const days = 14
-    const data = []
+    const data: DailyStat[] = []
     const today = new Date()
+
+    // Create a map of date -> visit count from analytics API
+    const visitsMap = new Map<string, number>()
+    if (analyticsData && Array.isArray(analyticsData)) {
+      analyticsData.forEach((stat: any) => {
+        if (stat.date) {
+          const dateKey = new Date(stat.date).toDateString()
+          visitsMap.set(dateKey, stat.count || stat.views || 0)
+        }
+      })
+    }
 
     for (let i = days - 1; i >= 0; i--) {
       const date = new Date(today)
@@ -153,15 +181,19 @@ export default function LeadsPage() {
       const nextDate = new Date(date)
       nextDate.setDate(nextDate.getDate() + 1)
 
-      const dayLeads = leads.filter(lead => {
+      const dayLeads = leadsData.filter(lead => {
         const leadDate = new Date(lead.createdAt)
         return leadDate >= date && leadDate < nextDate
       })
 
+      // Get real visits from analytics API, or 0 if no data
+      const dateKey = date.toDateString()
+      const visits = visitsMap.get(dateKey) || 0
+
       data.push({
         date: date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
         leads: dayLeads.length,
-        visits: Math.floor(dayLeads.length * (Math.random() * 3 + 2)) // Mock visits data (2-5x leads)
+        visits: visits
       })
     }
 
@@ -449,7 +481,7 @@ export default function LeadsPage() {
           <CardContent>
             <div className="h-64">
               <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={generateDailyStats()} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
+                <LineChart data={dailyStats} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
                   <XAxis dataKey="date" stroke="#6b7280" style={{ fontSize: '12px' }} />
                   <YAxis stroke="#6b7280" style={{ fontSize: '12px' }} />

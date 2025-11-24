@@ -28,6 +28,14 @@ export const API_ENDPOINTS = {
   SETTINGS: {
     CHANGE_PASSWORD: `${API_URL}/api/auth/change-password`,
   },
+  ANALYTICS: {
+    OVERVIEW: `${API_URL}/api/analytics/overview`,
+    DAILY_STATS: `${API_URL}/api/analytics/daily-stats`,
+    TRACK: `${API_URL}/api/analytics/track`,
+    TOTAL_VIEWS: `${API_URL}/api/analytics/total-views`,
+    TODAY_VIEWS: `${API_URL}/api/analytics/today-views`,
+    UNIQUE_VISITORS: `${API_URL}/api/analytics/unique-visitors`,
+  },
 }
 
 // Security Settings
