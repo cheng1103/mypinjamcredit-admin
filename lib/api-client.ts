@@ -1,7 +1,7 @@
 import { TOKEN_KEY, USER_KEY, TOKEN_EXPIRY_KEY } from './config'
 
-// Token management with expiration
-export const setAuthToken = (token: string, expiresIn: string = '7d') => {
+// Token management with expiration (reduced to 1 day for security)
+export const setAuthToken = (token: string, expiresIn: string = '1d') => {
   if (typeof window === 'undefined') return
 
   localStorage.setItem(TOKEN_KEY, token)
