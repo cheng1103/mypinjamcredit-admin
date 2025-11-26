@@ -23,6 +23,9 @@ export default function LoginPage() {
       setAuthToken(data.access_token)
       setUserData(data.user)
 
+      // Small delay to ensure localStorage is flushed before navigation
+      await new Promise(resolve => setTimeout(resolve, 100))
+
       router.push('/dashboard')
     } catch (err) {
       if (err instanceof ApiError) {

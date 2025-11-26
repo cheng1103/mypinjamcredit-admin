@@ -14,6 +14,9 @@ interface DashboardStats {
   totalUsers: number
   pendingTestimonials: number
   recentLeads: Lead[]
+  totalViews: number
+  todayViews: number
+  uniqueVisitors: number
 }
 
 interface Lead {
@@ -39,7 +42,10 @@ export default function DashboardPage() {
     todayLeads: 0,
     totalUsers: 0,
     pendingTestimonials: 0,
-    recentLeads: []
+    recentLeads: [],
+    totalViews: 0,
+    todayViews: 0,
+    uniqueVisitors: 0
   })
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
@@ -52,22 +58,33 @@ export default function DashboardPage() {
     const userData = getUserData()
 
     if (!userData) {
-      router.push('/login')
-      return
-    }
+      // Add small delay to prevent race condition with localStorage
+      const timeoutId = setTimeout(() => {
+        const retryUserData = getUserData()
+        if (!retryUserData) {
+          router.push('/login')
+        } else {
+          setUser(retryUserData)
+          fetchDashboardData()
+        }
+      }, 150)
 
-    setUser(userData)
-    fetchDashboardData()
+      return () => clearTimeout(timeoutId)
+    } else {
+      setUser(userData)
+      fetchDashboardData()
+    }
   }, [router])
 
   const fetchDashboardData = async () => {
     setRefreshing(true)
     try {
-      // Parallel API calls with the new client
-      const [leads, users, testimonials] = await Promise.all([
+      // Parallel API calls with the new client - now including analytics
+      const [leads, users, testimonials, analytics] = await Promise.all([
         api.get(API_ENDPOINTS.LEADS.LIST),
         api.get(API_ENDPOINTS.USERS.LIST),
         api.get(API_ENDPOINTS.TESTIMONIALS.MODERATION),
+        api.get(API_ENDPOINTS.ANALYTICS.OVERVIEW),
       ])
 
       // Calculate today's leads
@@ -89,7 +106,11 @@ export default function DashboardPage() {
         todayLeads,
         totalUsers: users.length,
         pendingTestimonials: testimonials.filter((t: any) => t.status === 'PENDING').length,
-        recentLeads: sortedLeads.slice(0, 5)
+        recentLeads: sortedLeads.slice(0, 5),
+        // Analytics data from API
+        totalViews: analytics.totalViews || 0,
+        todayViews: analytics.todayViews || 0,
+        uniqueVisitors: analytics.uniqueVisitors || 0
       })
 
       setLastUpdate(new Date())
