@@ -105,13 +105,30 @@ export default function DashboardPage() {
   const fetchDashboardData = async () => {
     setRefreshing(true)
     try {
+      console.log('Starting dashboard data fetch...')
+
       // Parallel API calls with the new client - now including analytics
       const [leads, users, testimonials, analytics] = await Promise.all([
-        api.get(API_ENDPOINTS.LEADS.LIST),
-        api.get(API_ENDPOINTS.USERS.LIST),
-        api.get(API_ENDPOINTS.TESTIMONIALS.MODERATION),
-        api.get(API_ENDPOINTS.ANALYTICS.OVERVIEW),
+        api.get(API_ENDPOINTS.LEADS.LIST).catch(err => {
+          console.error('Leads API failed:', err)
+          throw err
+        }),
+        api.get(API_ENDPOINTS.USERS.LIST).catch(err => {
+          console.error('Users API failed:', err)
+          throw err
+        }),
+        api.get(API_ENDPOINTS.TESTIMONIALS.MODERATION).catch(err => {
+          console.error('Testimonials API failed:', err)
+          throw err
+        }),
+        api.get(API_ENDPOINTS.ANALYTICS.OVERVIEW).catch(err => {
+          console.error('Analytics API failed:', err)
+          throw err
+        }),
       ])
+
+      console.log('All API calls succeeded')
+      console.log('Analytics data:', analytics)
 
       // Calculate today's leads
       const today = new Date()
@@ -140,8 +157,14 @@ export default function DashboardPage() {
       })
 
       setLastUpdate(new Date())
+      console.log('Dashboard data loaded successfully')
     } catch (error) {
       console.error('Failed to fetch dashboard data:', error)
+
+      // Show error to user instead of silent failure
+      if (error instanceof Error) {
+        alert(`Failed to load dashboard: ${error.message}`)
+      }
       // API client already handles 401 redirects
     } finally {
       setLoading(false)

@@ -87,7 +87,10 @@ export const apiClient = async (url: string, options: ApiOptions = {}) => {
   // Add auth token if required
   if (requiresAuth) {
     const token = getAuthToken()
+    console.log('Auth token check:', token ? `Token exists (length: ${token.length})` : 'No token found')
+
     if (!token) {
+      console.error('No auth token found, redirecting to login')
       // Redirect to login
       if (typeof window !== 'undefined') {
         window.location.href = '/login'
@@ -98,13 +101,18 @@ export const apiClient = async (url: string, options: ApiOptions = {}) => {
   }
 
   try {
+    console.log(`API Request: ${fetchOptions.method || 'GET'} ${url}`)
+
     const response = await fetch(url, {
       ...fetchOptions,
       headers,
     })
 
+    console.log(`API Response: ${response.status} ${response.statusText}`)
+
     // Handle 401 Unauthorized
     if (response.status === 401) {
+      console.error('401 Unauthorized - clearing auth and redirecting')
       clearAuth()
       if (typeof window !== 'undefined') {
         window.location.href = '/login'
@@ -112,11 +120,29 @@ export const apiClient = async (url: string, options: ApiOptions = {}) => {
       throw new ApiError('Unauthorized', 401, null)
     }
 
+    // Handle 403 Forbidden
+    if (response.status === 403) {
+      console.error('403 Forbidden - insufficient permissions')
+      let errorData
+      try {
+        errorData = await response.json()
+        console.error('403 Error details:', errorData)
+      } catch {
+        errorData = { message: 'Forbidden - insufficient permissions' }
+      }
+      throw new ApiError(
+        errorData.message || 'Forbidden - insufficient permissions',
+        403,
+        errorData
+      )
+    }
+
     // Handle other error statuses
     if (!response.ok) {
       let errorData
       try {
         errorData = await response.json()
+        console.error(`${response.status} Error details:`, errorData)
       } catch {
         errorData = { message: 'An error occurred' }
       }
@@ -130,7 +156,9 @@ export const apiClient = async (url: string, options: ApiOptions = {}) => {
     // Parse response
     const contentType = response.headers.get('content-type')
     if (contentType && contentType.includes('application/json')) {
-      return await response.json()
+      const data = await response.json()
+      console.log('API Response data:', data)
+      return data
     }
 
     return response
@@ -140,6 +168,7 @@ export const apiClient = async (url: string, options: ApiOptions = {}) => {
     }
 
     // Network or other errors
+    console.error('Network error:', error)
     throw new ApiError(
       'Network error. Please check your connection.',
       0,
