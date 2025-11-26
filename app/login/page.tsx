@@ -17,6 +17,19 @@ export default function LoginPage() {
     try {
       const data = await api.post(API_ENDPOINTS.AUTH.LOGIN, formData, { requiresAuth: false })
 
+      console.log('Login response:', data)
+      console.log('Access token:', data.access_token)
+      console.log('Token type:', typeof data.access_token)
+      console.log('Token length:', data.access_token?.length)
+      console.log('User data:', data.user)
+
+      // Validate token before saving
+      if (!data.access_token || data.access_token.length < 50) {
+        console.error('Invalid token received from server!')
+        setError('Invalid authentication token received. Please try again.')
+        return
+      }
+
       // Clear ALL localStorage first to ensure no conflicts
       if (typeof window !== 'undefined') {
         localStorage.clear()
@@ -31,6 +44,9 @@ export default function LoginPage() {
         sessionStorage.setItem('admin_backup_token', data.access_token)
         sessionStorage.setItem('admin_backup_user', JSON.stringify(data.user))
       }
+
+      console.log('Token saved to localStorage:', localStorage.getItem('adminToken'))
+      console.log('Token saved length:', localStorage.getItem('adminToken')?.length)
 
       // Longer delay to ensure localStorage is fully persisted
       await new Promise(resolve => setTimeout(resolve, 200))
