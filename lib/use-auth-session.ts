@@ -32,7 +32,6 @@ export function useAuthSession() {
 
     // Check token expiration
     if (!token || (expiryStr && now > parseInt(expiryStr))) {
-      console.log('Session expired: Token expired')
       handleLogout('Your session has expired. Please log in again.')
       return
     }
@@ -40,7 +39,6 @@ export function useAuthSession() {
     // Check activity timeout
     const timeSinceActivity = now - lastActivityRef.current
     if (timeSinceActivity > ACTIVITY_TIMEOUT) {
-      console.log('Session expired: Inactivity timeout')
       handleLogout('You have been logged out due to inactivity.')
       return
     }
