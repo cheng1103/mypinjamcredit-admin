@@ -55,12 +55,38 @@ export default function DashboardPage() {
 
   useEffect(() => {
     // Safe JSON parse with error handling
-    const userData = getUserData()
+    let userData = getUserData()
+
+    // If localStorage fails, try sessionStorage backup
+    if (!userData && typeof window !== 'undefined') {
+      const backupUser = sessionStorage.getItem('admin_backup_user')
+      if (backupUser) {
+        try {
+          userData = JSON.parse(backupUser)
+          console.log('Restored user data from sessionStorage backup')
+        } catch (e) {
+          console.error('Failed to parse backup user data')
+        }
+      }
+    }
 
     if (!userData) {
       // Add small delay to prevent race condition with localStorage
       const timeoutId = setTimeout(() => {
-        const retryUserData = getUserData()
+        let retryUserData = getUserData()
+
+        // Try sessionStorage again on retry
+        if (!retryUserData && typeof window !== 'undefined') {
+          const backupUser = sessionStorage.getItem('admin_backup_user')
+          if (backupUser) {
+            try {
+              retryUserData = JSON.parse(backupUser)
+            } catch (e) {
+              console.error('Failed to parse backup user data on retry')
+            }
+          }
+        }
+
         if (!retryUserData) {
           router.push('/login')
         } else {

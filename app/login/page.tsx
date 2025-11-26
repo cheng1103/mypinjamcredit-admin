@@ -19,14 +19,26 @@ export default function LoginPage() {
     try {
       const data = await api.post(API_ENDPOINTS.AUTH.LOGIN, formData, { requiresAuth: false })
 
+      // Clear ALL localStorage first to ensure no conflicts
+      if (typeof window !== 'undefined') {
+        localStorage.clear()
+      }
+
       // Save auth data with expiration tracking
       setAuthToken(data.access_token)
       setUserData(data.user)
 
-      // Small delay to ensure localStorage is flushed before navigation
-      await new Promise(resolve => setTimeout(resolve, 100))
+      // Also save to sessionStorage as backup
+      if (typeof window !== 'undefined') {
+        sessionStorage.setItem('admin_backup_token', data.access_token)
+        sessionStorage.setItem('admin_backup_user', JSON.stringify(data.user))
+      }
 
-      router.push('/dashboard')
+      // Longer delay to ensure localStorage is fully persisted
+      await new Promise(resolve => setTimeout(resolve, 200))
+
+      // Force a hard navigation instead of client-side routing
+      window.location.href = '/dashboard'
     } catch (err) {
       if (err instanceof ApiError) {
         if (err.status === 401) {
