@@ -297,10 +297,10 @@ export default function LeadsPage() {
       if (showDetailModal && selectedLead?.id === leadId) {
         setShowDetailModal(false)
       }
-      alert('Application deleted successfully')
+      alert('✓ Application deleted successfully')
     } catch (error) {
       console.error('Failed to delete lead:', error)
-      alert('Failed to delete application')
+      alert('✗ Failed to delete application')
     }
   }
 

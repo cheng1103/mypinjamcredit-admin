@@ -84,10 +84,12 @@ export default function TestimonialsPage() {
         setShowDetailModal(false)
         setSelectedTestimonial(null)
       }
+      alert('✓ Testimonial deleted successfully')
       setSuccess('Testimonial deleted successfully')
       setTimeout(() => setSuccess(''), 3000)
     } catch (error) {
       console.error('Failed to delete testimonial:', error)
+      alert('✗ Failed to delete testimonial')
     }
   }
 

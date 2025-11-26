@@ -127,9 +127,11 @@ export default function UsersPage() {
       setUsers(users.filter(u => u.id !== selectedUser.id))
       setShowDeleteModal(false)
       setSelectedUser(null)
+      alert('✓ User deleted successfully')
       setSuccess('User deleted successfully')
       setTimeout(() => setSuccess(''), 3000)
     } catch (error: any) {
+      alert('✗ Failed to delete user')
       setError(error.data?.message || 'Failed to delete user')
     }
   }
