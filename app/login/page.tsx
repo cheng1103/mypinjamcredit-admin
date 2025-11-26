@@ -1,12 +1,10 @@
 'use client'
 
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
 import { API_ENDPOINTS } from '@/lib/config'
 import { api, setAuthToken, setUserData, ApiError } from '@/lib/api-client'
 
 export default function LoginPage() {
-  const router = useRouter()
   const [formData, setFormData] = useState({ username: '', password: '' })
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
