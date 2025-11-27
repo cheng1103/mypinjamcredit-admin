@@ -252,7 +252,7 @@ export default function LeadsPage() {
 
   const handleAssignmentChange = async (leadId: string, userId: string) => {
     try {
-      await api.patch(API_ENDPOINTS.LEADS.ASSIGN(leadId), { userId: userId || null })
+      await api.patch(API_ENDPOINTS.LEADS.ASSIGN(leadId), { adminId: userId || null })
       setLeads(leads.map(lead =>
         lead.id === leadId ? { ...lead, assignedTo: userId || undefined } : lead
       ))
