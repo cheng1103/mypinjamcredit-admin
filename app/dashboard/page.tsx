@@ -296,6 +296,42 @@ export default function DashboardPage() {
           </Card>
         </div>
 
+        {/* Analytics Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+          <Card className="border-purple-200 bg-purple-50">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium text-purple-900">Total Page Views</CardTitle>
+              <Eye className="h-4 w-4 text-purple-600" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-purple-900">{stats.totalViews}</div>
+              <p className="text-xs text-purple-700 mt-1">All time website visits</p>
+            </CardContent>
+          </Card>
+
+          <Card className="border-green-200 bg-green-50">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium text-green-900">Today's Page Views</CardTitle>
+              <TrendingUp className="h-4 w-4 text-green-600" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-green-900">{stats.todayViews}</div>
+              <p className="text-xs text-green-700 mt-1">Page views today</p>
+            </CardContent>
+          </Card>
+
+          <Card className="border-amber-200 bg-amber-50">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium text-amber-900">Unique Visitors</CardTitle>
+              <Users className="h-4 w-4 text-amber-600" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-amber-900">{stats.uniqueVisitors}</div>
+              <p className="text-xs text-amber-700 mt-1">Distinct IP addresses</p>
+            </CardContent>
+          </Card>
+        </div>
+
         {/* Recent Applications */}
         <Card>
           <CardHeader>
